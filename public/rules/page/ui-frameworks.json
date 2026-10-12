@@ -361,6 +361,70 @@
             "cssVariables": ["--neutral-fill-rest", "--accent-fill-rest", "--neutral-foreground-rest"]
           }
         ]
+      },
+      {
+        "category": "UI / CSS 框架",
+        "name": "UIkit",
+        "url": "https://getuikit.com/",
+        "confidence": "高",
+        "patterns": [
+          "uikit(?:\\.min)?\\.(?:js|css)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)",
+          "(?:^|/)uikit(?:@[^/\\s\"'<>]+)?/.+\\.(?:js|css)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)"
+        ],
+        "globals": ["UIkit"],
+        "classPrefixes": ["uk-"]
+      },
+      {
+        "defaults": {
+          "category": "UI / CSS 框架",
+          "confidence": "中"
+        },
+        "rules": [
+          {
+            "name": "Varlet UI",
+            "url": "https://varlet.pages.dev/",
+            "patterns": ["(?:^|/)@varlet/ui(?:[@/])"],
+            "classPrefixes": ["var-"]
+          },
+          {
+            "name": "NutUI",
+            "url": "https://nutui.jd.com/",
+            "patterns": ["(?:^|/)@nutui/(?:nutui|taro|uniapp)(?:[@/])"],
+            "classPrefixes": ["nut-"]
+          },
+          {
+            "name": "Buefy",
+            "url": "https://buefy.org/",
+            "patterns": [
+              "(?:^|/)buefy(?:\\.min)?\\.(?:js|css)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)",
+              "(?:^|/)buefy(?:@[^/\\s\"'<>]+)?/.+\\.(?:js|css)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)"
+            ]
+          },
+          {
+            "name": "VitePress",
+            "url": "https://vitepress.dev/",
+            "patterns": [
+              "(?:^|/)@vitepress/(?:theme|client)(?:[@/])",
+              "/_vitepress/"
+            ]
+          },
+          {
+            "name": "Materialize CSS",
+            "url": "https://materializecss.com/",
+            "patterns": [
+              "materialize(?:\\.min)?\\.(?:js|css)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)",
+              "(?:^|/)materialize-css(?:@[^/\\s\"'<>]+)?/.+\\.(?:js|css)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)"
+            ]
+          },
+          {
+            "name": "Docusaurus",
+            "url": "https://docusaurus.io/",
+            "patterns": [
+              "(?:^|/)@docusaurus/(?:core|theme-[a-z-]+)(?:[@/])",
+              "/_docusaurus/"
+            ]
+          }
+        ]
       }
     ]
   }
