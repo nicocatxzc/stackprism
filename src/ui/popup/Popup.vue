@@ -23,7 +23,25 @@
         <RippleButton class="icon-btn primary" variant="primary" :title="t('nav.redetect')" @click="runDetection({ force: true })">
           <RefreshCw :size="16" :stroke-width="2" />
         </RippleButton>
+        <RippleButton class="icon-btn" :title="t('lang.label')" @click="showLangMenu = !showLangMenu">
+          <Languages :size="16" :stroke-width="2" />
+        </RippleButton>
       </div>
+      <Transition name="lang-menu">
+        <div v-if="showLangMenu" class="lang-menu" role="menu">
+          <button
+            v-for="loc in SUPPORTED_LOCALES"
+            :key="loc.code"
+            type="button"
+            class="lang-option"
+            :class="{ active: locale === loc.code }"
+            role="menuitem"
+            @click="switchLocale(loc.code as SupportedLocale)"
+          >
+            {{ loc.label }}
+          </button>
+        </div>
+      </Transition>
     </header>
 
     <div v-if="!state.pageSupported" class="unsupported">
@@ -79,23 +97,23 @@
         <nav class="filter-bar" aria-label="技术分类过滤">
           <div class="segment" role="tablist">
             <RippleButton
-            role="tab"
-            :class="['segment-btn', { active: state.activeCategory === FOCUS_CATEGORY }]"
-            :aria-selected="state.activeCategory === FOCUS_CATEGORY"
-            @click="selectCategory(FOCUS_CATEGORY)"
-          >
-            <span>{{ t('summary.focus') }}</span>
-            <span class="segment-count">{{ focusCount }}</span>
-          </RippleButton>
-          <RippleButton
-            role="tab"
-            :class="['segment-btn', { active: state.activeCategory === allCategory }]"
-            :aria-selected="state.activeCategory === allCategory"
-            @click="selectCategory(allCategory)"
-          >
-            <span>{{ t('summary.all') }}</span>
-            <span class="segment-count">{{ totalCount }}</span>
-          </RippleButton>
+              role="tab"
+              :class="['segment-btn', { active: state.activeCategory === FOCUS_CATEGORY }]"
+              :aria-selected="state.activeCategory === FOCUS_CATEGORY"
+              @click="selectCategory(FOCUS_CATEGORY)"
+            >
+              <span>{{ t('summary.focus') }}</span>
+              <span class="segment-count">{{ focusCount }}</span>
+            </RippleButton>
+            <RippleButton
+              role="tab"
+              :class="['segment-btn', { active: state.activeCategory === allCategory }]"
+              :aria-selected="state.activeCategory === allCategory"
+              @click="selectCategory(allCategory)"
+            >
+              <span>{{ t('summary.all') }}</span>
+              <span class="segment-count">{{ totalCount }}</span>
+            </RippleButton>
           </div>
           <div class="filter-select">
             <Select v-model="categoryFilterValue" :options="categoryFilterOptions" :placeholder="t('summary.selectCategory')" />
@@ -141,7 +159,7 @@
         </div>
 
         <Transition name="scroll-top-fade">
-          <RippleButton v-show="showScrollTop" class="scroll-top" title="返回顶部" @click="scrollSectionsTop">
+          <RippleButton v-show="showScrollTop" class="scroll-top" :title="t('nav.scrollTop')" @click="scrollSectionsTop">
             <ArrowUp :size="16" :stroke-width="2" />
           </RippleButton>
         </Transition>
@@ -157,7 +175,12 @@
         <header class="footer-panel-head">
           <span class="footer-panel-title">{{ footerPanelTitle }}</span>
           <div class="footer-panel-actions">
-            <RippleButton v-if="footerPanel === 'raw'" class="footer-panel-copy" :title="t('footer.downloadRaw')" @click="downloadRawOutput">
+            <RippleButton
+              v-if="footerPanel === 'raw'"
+              class="footer-panel-copy"
+              :title="t('footer.downloadRaw')"
+              @click="downloadRawOutput"
+            >
               <Download :size="12" :stroke-width="2" />
             </RippleButton>
             <RippleButton v-if="footerPanel === 'raw'" class="footer-panel-copy" :title="t('footer.copyRaw')" @click="copyRawOutput">
@@ -168,7 +191,7 @@
             </RippleButton>
           </div>
         </header>
-          <div v-if="footerPanel === 'search'" class="footer-panel-body">
+        <div v-if="footerPanel === 'search'" class="footer-panel-body">
           <div class="search-row">
             <Input v-model="search.query" type="search" :placeholder="t('search.placeholder')" @keydown="onSearchKeydown" />
             <RippleButton @click="searchPageSourceFromPopup">{{ t('footer.search') }}</RippleButton>
@@ -222,7 +245,9 @@
               <span class="tech-detail-category">{{ selectedTech.category }}</span>
               <span class="tech-detail-name">{{ selectedTech.name }}</span>
             </div>
-            <span :class="['confidence', confidenceClass(selectedTech.confidence)]">{{ t('detail.confidence', { level: selectedTech.confidence }) }}</span>
+            <span :class="['confidence', confidenceClass(selectedTech.confidence)]">
+              {{ t('detail.confidence', { level: selectedTech.confidence }) }}
+            </span>
           </div>
           <button
             v-if="selectedTech.url"
@@ -255,12 +280,7 @@
               </button>
             </div>
           </section>
-          <button
-            type="button"
-            class="tech-detail-correction"
-            title=""
-            @click="openCorrectionIssue(selectedTech)"
-          >
+          <button type="button" class="tech-detail-correction" title="" @click="openCorrectionIssue(selectedTech)">
             <Flag :size="12" :stroke-width="2" />
             <span>{{ t('detail.correct') }}</span>
           </button>
@@ -300,6 +320,7 @@
   import { onMounted, onBeforeUnmount, reactive, ref, computed, watch, type Ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import {
+    ArrowUp,
     Ban,
     ClipboardList,
     Copy,
@@ -308,6 +329,7 @@
     FileCode,
     Flag,
     Inbox,
+    Languages,
     Loader2,
     Monitor,
     Moon,
@@ -337,9 +359,18 @@
   } from '@/utils/constants'
   import { cycleTheme, getStoredTheme, setStoredTheme, themeLabel, type ThemeMode } from '@/utils/theme'
   import { checkPageSupport } from '@/utils/page-support'
+  import { SUPPORTED_LOCALES, setStoredLocale, type SupportedLocale } from '@/i18n'
   import { formatTechStackReport } from '@/utils/format-tech-stack'
 
-  const { t } = useI18n()
+  const { t, locale } = useI18n({ useScope: 'global' })
+
+  const showLangMenu = ref(false)
+
+  const switchLocale = async (code: SupportedLocale) => {
+    locale.value = code
+    showLangMenu.value = false
+    await setStoredLocale(code)
+  }
   const RAW_LOADING_TEXT = t('state.loadingRaw')
 
   // 当前语言的"全部"分类标签（英语等用 'all'，中文用 '全部'）
@@ -1268,6 +1299,7 @@
     display: flex;
     flex: 0 0 auto;
     gap: 4px;
+    position: relative;
     white-space: nowrap;
 
     button {
@@ -1307,6 +1339,61 @@
     justify-content: center;
     padding: 0 !important;
     width: 28px;
+  }
+
+  // 语言菜单
+  .lang-menu {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    min-width: 120px;
+    overflow: hidden;
+    padding: 4px;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 100;
+  }
+
+  .lang-option {
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: var(--text);
+    cursor: pointer;
+    display: block;
+    font-size: 12px;
+    padding: 5px 10px;
+    text-align: left;
+    transition:
+      background 0.12s ease,
+      color 0.12s ease;
+    white-space: nowrap;
+    width: 100%;
+
+    &:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    &.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+  }
+
+  .lang-menu-enter-active,
+  .lang-menu-leave-active {
+    transition:
+      opacity 0.12s ease,
+      transform 0.12s ease;
+  }
+
+  .lang-menu-enter-from,
+  .lang-menu-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 
   // msg 浮动通知：与 settings 一致的悬浮提示
