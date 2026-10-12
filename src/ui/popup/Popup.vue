@@ -148,7 +148,7 @@
                   >
                     <TechChip :name="tech.name" :url="tech.url" />
                     <span class="tech-row-name">
-                      {{ tech.name }}
+                      {{ tTechName(tech.name) }}
                       <span v-if="tech.version" class="tech-row-version">{{ tech.version }}</span>
                     </span>
                   </button>
@@ -242,11 +242,11 @@
           <div class="tech-detail-head">
             <TechChip :name="selectedTech.name" :url="selectedTech.url" large />
             <div class="tech-detail-meta">
-              <span class="tech-detail-category">{{ selectedTech.category }}</span>
+              <span class="tech-detail-category">{{ tCat(selectedTech.category) }}</span>
               <span class="tech-detail-name">{{ selectedTech.name }}</span>
             </div>
             <span :class="['confidence', confidenceClass(selectedTech.confidence)]">
-              {{ t('detail.confidence', { level: selectedTech.confidence }) }}
+              {{ t('detail.confidence', { level: tConfidence(selectedTech.confidence) }) }}
             </span>
           </div>
           <button
@@ -262,7 +262,7 @@
           <section v-if="selectedTech.evidence?.length" class="tech-detail-section">
             <h3>{{ t('detail.evidence') }}</h3>
             <ul class="tech-detail-evidence">
-              <li v-for="(ev, i) in selectedTech.evidence" :key="i">{{ ev }}</li>
+              <li v-for="(ev, i) in selectedTech.evidence" :key="i">{{ tEvidence(ev) }}</li>
             </ul>
           </section>
           <section v-if="selectedTech.sources?.length" class="tech-detail-section">
@@ -273,10 +273,10 @@
                 :key="src"
                 type="button"
                 class="tech-detail-source"
-                :title="t('detail.viewSource', { source: src })"
+                :title="t('detail.viewSource', { source: tSource(src) })"
                 @click="openSourceRaw(selectedTech, src)"
               >
-                {{ src }}
+                {{ tSource(src) }}
               </button>
             </div>
           </section>
@@ -378,6 +378,140 @@
     return (map && map[zhName]) || zhName
   }
 
+  // 把置信度中文值翻译成当前语言
+  const tConfidence = (level: string): string => {
+    if (level === '高') return t('settings.form.confidenceHigh')
+    if (level === '中') return t('settings.form.confidenceMid')
+    if (level === '低') return t('settings.form.confidenceLow')
+    return level
+  }
+
+  // 翻译证据字符串（前缀匹配后翻译前缀，保留后面的具体内容）
+  const EVIDENCE_PREFIX_MAP: Record<string, string> = {
+    'DOM 匹配': 'ev.domMatch',
+    '资源 URL 匹配': 'ev.resourceMatch',
+    '页面 URL 匹配': 'ev.urlMatch',
+    'CSS 变量匹配': 'ev.cssVarMatch',
+    'JS 版权注释匹配': 'ev.licenseMatch',
+    '兜底识别：': 'ev.fallback',
+    '疑似前端库:': 'suspect.frontendLib',
+    '疑似前端库：': 'suspect.frontendLib'
+  }
+  const tEvidence = (ev: string): string => {
+    if (!ev) return ev
+    // 兜底识别 — 脚本文件名格式
+    const scriptMatch = ev.match(/^兜底识别：根据脚本文件名 (.+?) 判断，未匹配到内置规则或官网链接$/)
+    if (scriptMatch) return `${t('ev.fallback')}${t('ev.fallbackScript', { file: scriptMatch[1] })}`
+    const dynMatch = ev.match(/^兜底识别：根据动态脚本文件名 (.+?) 判断，未匹配到内置规则或官网链接$/)
+    if (dynMatch) return `${t('ev.fallback')}${t('ev.fallbackDynamic', { file: dynMatch[1] })}`
+    // 私有 CDN
+    const cdnMatch = ev.match(/^(\d+) 个资源域名疑似私有 CDN，如 (.+)$/)
+    if (cdnMatch) return t('ev.privateCdn', { count: cdnMatch[1], examples: cdnMatch[2] })
+    // 规则数据里的 evidence 前缀模式
+    const setCookieMatch = ev.match(/^Set-Cookie 包含 (.+)$/)
+    if (setCookieMatch) return t('ev.setCookieContains', { value: setCookieMatch[1] })
+    const headerContainsMatch = ev.match(/^响应头包含 (.+)$/)
+    if (headerContainsMatch) return t('ev.headerContains', { value: headerContainsMatch[1] })
+    const serverMatch = ev.match(/^Server 头包含 (.+)$/)
+    if (serverMatch) return t('ev.serverHeaderContains', { value: serverMatch[1] })
+    const xCacheMatch = ev.match(/^X-Cache 包含 (.+)$/)
+    if (xCacheMatch) return t('ev.xCacheContains', { value: xCacheMatch[1] })
+    const viaMatch = ev.match(/^Via 包含 (.+)$/)
+    if (viaMatch) return t('ev.viaContains', { value: viaMatch[1] })
+    // React Fiber
+    if (ev === 'DOM 节点存在 React Fiber 标记') return t('ev.reactFiber')
+    // HTTPS
+    if (ev === '当前页面使用 HTTPS') return t('ev.httpsPage')
+    // HTTP/2 / HTTP/3
+    const httpProtoMatch = ev.match(/^资源使用 (HTTP\/[23]) 协议（如 (.+)）$/)
+    if (httpProtoMatch) return t('ev.httpProtocol', { proto: httpProtoMatch[1], example: httpProtoMatch[2] })
+    // window.X
+    const windowMatch = ev.match(/^存在 window\.(.+)$/)
+    if (windowMatch) return t('ev.windowGlobal', { name: windowMatch[1] })
+    // 页面源码匹配
+    if (ev === '页面源码或资源索引包含规则特征') return t('ev.pageSourceMatch')
+    // Service Worker
+    if (ev === '当前页面受 Service Worker 控制') return t('ev.serviceWorker')
+    // CSP meta
+    if (ev === '页面包含 CSP meta 标签') return t('ev.cspMeta')
+    // CDN/Edge 缓存线索
+    if (ev === '响应头包含 CDN 或 Edge 缓存线索') return t('ev.cdnEdgeHint')
+    // Tailwind atomic
+    if (ev === '存在大量 Tailwind 风格原子类名') return t('ev.tailwindAtomic')
+    // spoofed headers
+    if (ev === '响应头里同时出现多种不同主体身份字段，识别结果可能被伪造') return t('ev.spoofedHeaders')
+    // UnoCSS / Tailwind CSS variable prefixes (exact strings from page-detector)
+    if (ev === '存在 --un-* CSS 变量(UnoCSS 默认前缀)') return t('ev.unocssVar')
+    if (ev === '存在 --tw-* CSS 变量(Tailwind 默认前缀)') return t('ev.tailwindVar')
+    // PHP runtime inference
+    const phpBackendMatch = ev.match(/^由 (.+?) 后端框架推断 PHP 后端运行时$/)
+    if (phpBackendMatch) return t('ev.phpFromBackend', { name: phpBackendMatch[1] })
+    const phpCmsMatch = ev.match(/^由 (.+?) 站点程序推断 PHP 后端运行时$/)
+    if (phpCmsMatch) return t('ev.phpFromCms', { name: phpCmsMatch[1] })
+    const phpClueMatch = ev.match(/^由 (.+?) 技术线索推断 PHP 后端运行时$/)
+    if (phpClueMatch) return t('ev.phpFromClue', { name: phpClueMatch[1] })
+    // JS 包体内嵌 OAuth 入口（前面可能有 "类型：" 前缀）
+    const oauthMatch = ev.match(/^(?:(.+?)：)?JS 包体内嵌 OAuth 入口 (.+)$/)
+    if (oauthMatch) {
+      const prefix = oauthMatch[1] ? `${oauthMatch[1]}: ` : ''
+      return prefix + t('ev.oauthEmbed', { url: oauthMatch[2] })
+    }
+    // CSS 变量前缀：存在 --prefix-* CSS 变量
+    const cssVarPrefixMatch = ev.match(/^存在 (--[\w-]+\*) CSS 变量/)
+    if (cssVarPrefixMatch) return t('ev.cssVarPrefix', { prefix: cssVarPrefixMatch[1] })
+    // 类名前缀：存在 prefix-* 类名
+    const classPrefixMatch = ev.match(/^存在 ([\w-]+\*) 类名$/)
+    if (classPrefixMatch) return t('ev.classNamePrefix', { prefix: classPrefixMatch[1] })
+    // 具体类名：存在 className 类名
+    const classMatch = ev.match(/^存在 ([\w-]+) 类名$/)
+    if (classMatch) return t('ev.className', { name: classMatch[1] })
+    // 资源或源码路径包含
+    const resourcePathMatch = ev.match(/^资源或源码路径包含 (.+)$/)
+    if (resourcePathMatch) return t('ev.resourcePathContains', { path: resourcePathMatch[1] })
+    // 动态资源路径包含
+    const dynamicPathMatch = ev.match(/^动态资源路径包含 (.+)$/)
+    if (dynamicPathMatch) return t('ev.dynamicPathContains', { path: dynamicPathMatch[1] })
+    // feed 链接
+    const feedMatch = ev.match(/^发现 feed 链接：(.+)$/)
+    if (feedMatch) return t('ev.feedFound', { url: feedMatch[1] })
+    const dynFeedMatch = ev.match(/^动态发现 feed 链接：(.+)$/)
+    if (dynFeedMatch) return t('ev.dynamicFeedFound', { url: dynFeedMatch[1] })
+    // JS 版权注释匹配 URL
+    const licenseUrlMatch = ev.match(/^JS 版权注释匹配 (.+)$/)
+    if (licenseUrlMatch) return `${t('ev.licenseMatch')} ${licenseUrlMatch[1]}`
+    // 资源 URL 匹配 X 等 N 个
+    const resourceUrlMatch = ev.match(/^资源 URL 匹配 (.+)$/)
+    if (resourceUrlMatch) return `${t('ev.resourceMatch')} ${resourceUrlMatch[1]}`
+    // DOM 匹配 selector
+    const domSelectorMatch = ev.match(/^DOM 匹配 (.+)$/)
+    if (domSelectorMatch) return `${t('ev.domMatch')} ${domSelectorMatch[1]}`
+    // CSS 变量匹配 X
+    const cssVarMatch = ev.match(/^CSS 变量匹配 (.+)$/)
+    if (cssVarMatch) return `${t('ev.cssVarMatch')} ${cssVarMatch[1]}`
+    // "X 匹配" 格式 — sourceLabel + 匹配
+    const sourceMatchSuffix = ev.match(/^(.+?) 匹配$/)
+    if (sourceMatchSuffix) return t('ev.ruleMatch', { source: tSource(sourceMatchSuffix[1]) })
+    for (const [prefix, key] of Object.entries(EVIDENCE_PREFIX_MAP)) {
+      if (ev.startsWith(prefix)) {
+        const translatedPrefix = t(key)
+        const rest = ev.slice(prefix.length)
+        return rest ? `${translatedPrefix} ${rest.trimStart()}` : translatedPrefix
+      }
+    }
+    return ev
+  }
+
+  // 翻译技术名称中的 "疑似前端库:" 前缀
+  const tTechName = (name: string): string => {
+    if (!name) return name
+    const m = name.match(/^疑似前端库[：:]\s*(.+)$/u)
+    if (m) return `${t('suspect.frontendLib')} ${m[1]}`
+    // 翻译生成的固定技术名称（如私有 CDN 兜底名）
+    const nameMap = tm('techNameMap') as Record<string, string> | undefined
+    if (nameMap?.[name]) return nameMap[name]
+    return name
+  }
+
   // 把后台返回的中文来源字符串翻译成当前语言
   const tSource = (zhSource: string): string => {
     if (!zhSource) return zhSource
@@ -385,9 +519,16 @@
     if (!map) return zhSource
     // 精确匹配
     if (map[zhSource]) return map[zhSource]
-    // 前缀匹配（如"动态监控 · 页面交互后"）
+    // 前缀匹配（如"动态监控 · 页面交互后" / "响应头 · API" / "响应头 · iframe"）
     for (const [key, val] of Object.entries(map)) {
-      if (zhSource.startsWith(key)) return val + zhSource.slice(key.length)
+      if (zhSource.startsWith(key)) {
+        const suffix = zhSource.slice(key.length)
+        const translatedSuffix = suffix
+          .replace('页面交互后', t('ev.afterInteraction'))
+          .replace(' · API', ` · ${map['API'] || 'API'}`)
+          .replace(' · iframe', ` · ${map['iframe'] || 'iframe'}`)
+        return val + translatedSuffix
+      }
     }
     return zhSource
   }
@@ -422,7 +563,8 @@
     meta: t('search.meta'),
     output: ''
   })
-  const rawOutputText = ref(RAW_PLACEHOLDER)
+  const rawOutputText = ref('')
+  const getRawPlaceholder = () => t('msg.rawPlaceholder')
   const theme = ref<ThemeMode>('auto')
   const footerPanel = ref<'search' | 'raw' | 'resources' | 'headers' | 'tech' | null>(null)
   const rawSourceContext = ref<{ tech: any; source: string } | null>(null)
@@ -437,7 +579,7 @@
     if (footerPanel.value !== 'raw') return ''
     const ctx = rawSourceContext.value
     if (!ctx) return t('footer.raw')
-    return `${t('footer.raw')} · ${ctx.tech?.name || ''} · ${ctx.source}`
+    return `${t('footer.raw')} · ${ctx.tech?.name || ''} · ${tSource(ctx.source)}`
   })
 
   const footerPanelTitle = computed(() => {
@@ -614,7 +756,7 @@
   })
 
   const categoryFilterOptions = computed(() =>
-    tabItems.value.map(item => ({ value: item.category, label: `${item.category} · ${item.count}` }))
+    tabItems.value.map(item => ({ value: item.category, label: `${tCat(item.category)} · ${item.count}` }))
   )
 
   const categoryFilterValue = computed({
@@ -733,11 +875,13 @@
     scheduleCachedResultRefresh(tabId, previousUpdatedAt, attempt + 1)
   }
 
-  const markUnsupportedPage = (url: string, reason: string) => {
+  const markUnsupportedPage = (url: string, reasonCode?: string) => {
     state.pageSupported = false
     state.result = null
-    unsupportedReason.value = reason
-    pageUrl.value = url || '当前标签页'
+    const code = reasonCode || 'unsupportedProtocol'
+    const reasonMap = tm('state.unsupportedReasons') as Record<string, string> | undefined
+    unsupportedReason.value = (reasonMap && reasonMap[code]) || t('state.unsupported')
+    pageUrl.value = url || t('msg.currentTab')
     setStatus('')
     clearCacheRefreshTimer()
   }
@@ -750,19 +894,19 @@
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (!tab || !tab.id) {
       isLoading.value = false
-      showError('无法读取当前标签页。')
+      showError(t('msg.noTab'))
       return
     }
 
     const support = checkPageSupport(tab.url || '')
     if (!support.supported) {
       isLoading.value = false
-      markUnsupportedPage(tab.url || '', support.reason)
+      markUnsupportedPage(tab.url || '', support.reasonCode)
       return
     }
 
     state.pageSupported = true
-    pageUrl.value = tab.url || '当前标签页'
+    pageUrl.value = tab.url || t('msg.currentTab')
     state.currentTabId = tab.id
     setStatus('')
 
@@ -777,23 +921,23 @@
       isLoading.value = false
 
       if (!response.hasCache) {
-        setStatus('还没有后台缓存，已请求后台检测；稍后会自动读取新结果，也可以点击"刷新"立即检测。')
+        setStatus(t('msg.noCache'))
         requestBackgroundDetection(tab.id)
         scheduleCachedResultRefresh(tab.id, response.updatedAt || 0, 0)
         return
       }
 
       if (response.stale) {
-        setStatus('后台正在更新缓存，当前结果可先使用。')
+        setStatus(t('msg.cacheUpdating'))
         requestBackgroundDetection(tab.id)
         scheduleCachedResultRefresh(tab.id, response.updatedAt || 0, 0)
         return
       }
 
-      setStatus('检测结果已加载。', 'ok')
+      setStatus(t('msg.loaded'), 'ok')
     } catch (error: any) {
       isLoading.value = false
-      showError(`读取后台缓存失败：${String(error?.message || error)}`)
+      showError(t('msg.cacheReadFailed', { msg: String(error?.message || error) }))
     }
   }
 
@@ -802,19 +946,19 @@
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (!tab || !tab.id) {
-      showError('无法读取当前标签页。')
+      showError(t('msg.noTab'))
       return
     }
 
     const support = checkPageSupport(tab.url || '')
     if (!support.supported) {
-      markUnsupportedPage(tab.url || '', support.reason)
+      markUnsupportedPage(tab.url || '', support.reasonCode)
       return
     }
 
     state.pageSupported = true
-    setStatus(force ? '已请求后台重新检测，当前结果可先使用。' : '已请求后台检测。', 'ok')
-    pageUrl.value = tab.url || '当前标签页'
+    setStatus(force ? t('msg.redetectRequested') : t('msg.detectRequested'), 'ok')
+    pageUrl.value = tab.url || t('msg.currentTab')
     state.currentTabId = tab.id
 
     const previousUpdatedAt = Number(state.result?.updatedAt || 0)
@@ -863,7 +1007,7 @@
       rawCopied
     }
     if (rawCopied) {
-      setStatus('完整原始线索已复制到剪贴板，跳转后可直接粘贴到议题中。', 'ok')
+      setStatus(t('msg.rawCopiedForIssue'), 'ok')
     }
     chrome.tabs.create({ url: buildCorrectionIssueUrl(tech, ctx) })
   }
@@ -881,47 +1025,47 @@
 
   const copyResult = async () => {
     const url = (state.result as any)?.url || pageUrl.value
-    if (!url || url === '正在检测当前标签页...') {
-      setStatus('暂无可复制的当前页 URL。', 'error')
+    if (!url || url === t('state.detecting')) {
+      setStatus(t('msg.noUrl'), 'error')
       return
     }
     try {
       await navigator.clipboard.writeText(String(url))
-      setStatus('已复制当前页 URL。', 'ok')
+      setStatus(t('msg.copyUrlDone'), 'ok')
     } catch (error: any) {
-      setStatus(`复制失败：${String(error?.message || error)}`, 'error')
+      setStatus(t('msg.copyFailed', { msg: String(error?.message || error) }), 'error')
     }
   }
 
   const copyRawOutput = async () => {
     const text = rawOutputText.value
     if (!text || text === RAW_PLACEHOLDER || text === RAW_LOADING_TEXT) {
-      setStatus('暂无可复制的原始线索。', 'error')
+      setStatus(t('msg.noRawCopy'), 'error')
       return
     }
     try {
       await navigator.clipboard.writeText(text)
-      setStatus('已复制原始线索。', 'ok')
+      setStatus(t('msg.rawCopied'), 'ok')
     } catch (error: any) {
-      setStatus(`复制失败：${String(error?.message || error)}`, 'error')
+      setStatus(t('msg.copyFailed', { msg: String(error?.message || error) }), 'error')
     }
   }
 
   const copyTechStackReport = async () => {
     const result = state.result
     if (!result) {
-      setStatus('暂无可复制的技术栈信息。', 'error')
+      setStatus(t('msg.noTechStack'), 'error')
       return
     }
     if (!navigator.clipboard?.writeText) {
-      setStatus('当前浏览器不支持直接复制技术栈报告。', 'error')
+      setStatus(t('msg.copyUnsupported'), 'error')
       return
     }
     try {
       await navigator.clipboard.writeText(formatTechStackReport(result))
-      setStatus('已复制完整技术栈报告。', 'ok')
+      setStatus(t('msg.reportCopied'), 'ok')
     } catch (error: any) {
-      setStatus(`复制失败：${String(error?.message || error)}`, 'error')
+      setStatus(t('msg.copyFailed', { msg: String(error?.message || error) }), 'error')
     }
   }
 
@@ -956,7 +1100,7 @@
   const downloadRawOutput = () => {
     const text = rawOutputText.value
     if (!text || text === RAW_PLACEHOLDER || text === RAW_LOADING_TEXT) {
-      setStatus('暂无可下载的原始线索。', 'error')
+      setStatus(t('msg.noRawDownload'), 'error')
       return
     }
     try {
@@ -969,9 +1113,9 @@
       anchor.click()
       anchor.remove()
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
-      setStatus(rawSourceContext.value ? '已下载来源详情。' : '已下载完整原始线索。', 'ok')
+      setStatus(rawSourceContext.value ? t('msg.sourceDownloaded') : t('msg.rawDownloaded'), 'ok')
     } catch (error: any) {
-      setStatus(`下载失败：${String(error?.message || error)}`, 'error')
+      setStatus(t('msg.downloadFailed', { msg: String(error?.message || error) }), 'error')
     }
   }
 
@@ -986,9 +1130,16 @@
 
   const getActiveTabId = async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab || !tab.id) throw new Error('无法读取当前标签页。')
+    if (!tab || !tab.id) throw new Error(t('msg.noTab'))
     const support = checkPageSupport(tab.url || '')
-    if (!support.supported) throw new Error(support.reason)
+    if (!support.supported)
+      throw new Error(
+        (() => {
+          const code = support.reasonCode || 'unsupportedProtocol'
+          const reasonMap = tm('state.unsupportedReasons') as Record<string, string> | undefined
+          return (reasonMap && reasonMap[code]) || t('state.unsupported')
+        })()
+      )
     state.currentTabId = tab.id
     return tab.id
   }
@@ -1067,13 +1218,13 @@
     if (footerPanel.value === 'raw') {
       void renderRawOutput()
     } else {
-      rawOutputText.value = RAW_PLACEHOLDER
+      rawOutputText.value = getRawPlaceholder()
     }
   }
 
   const renderRawOutput = async () => {
     if (!state.result) {
-      rawOutputText.value = '暂无原始线索。'
+      rawOutputText.value = t('msg.noRaw')
       return
     }
     rawOutputText.value = RAW_LOADING_TEXT
