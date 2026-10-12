@@ -78,6 +78,7 @@ export default {
     allOff: '全关',
     disabledTech: '禁用指定技术',
     disabledTechHint: '每行一个技术名称。名称匹配后不会在结果里显示。',
+    disabledTechPlaceholder: '例如：\nGoogle Analytics\nWordPress 插件: akismet',
     customCss: '自定义样式 CSS',
     customCssHint: '保存后会应用到弹窗和设置页。留空则不覆盖样式。',
     customRules: '自定义规则',
@@ -124,5 +125,43 @@ export default {
     openSettings: '打开设置页',
     github: 'GitHub 仓库'
   },
-  lang: { label: '语言' }
+  lang: { label: '语言' },
+  categories: {
+    前端框架: '前端框架',
+    'UI / CSS 框架': 'UI / CSS 框架',
+    前端库: '前端库',
+    构建与运行时: '构建与运行时',
+    'CDN / 托管': 'CDN / 托管',
+    'WAF / 防火墙': 'WAF / 防火墙',
+    Web服务器: 'Web 服务器',
+    后端服务器框架: '后端 / 服务器框架',
+    开发语言运行时: '开发语言 / 运行时',
+    网站程序: '网站程序',
+    主题模板: '主题 / 模板',
+    网站源码线索: '网站源码线索',
+    探针监控: '探针 / 监控',
+    CMS电商平台: 'CMS / 电商平台',
+    RSS订阅: 'RSS / 订阅',
+    SaaS第三方服务: 'SaaS / 第三方服务',
+    AI大模型: 'AI / 大模型',
+    第三方登录OAuth: '第三方登录 / OAuth',
+    支付系统: '支付系统',
+    广告营销: '广告 / 营销',
+    统计分析: '统计 / 分析',
+    分析与标签: '分析与标签',
+    安全与协议: '安全与协议',
+    其他库: '其他库'
+  },
+  sources: {
+    页面扫描: '页面扫描',
+    JS版权注释: 'JS 版权注释',
+    动态监控: '动态监控',
+    JSON动态技术规则: 'JSON 动态技术规则',
+    JSON前端框架动态规则: 'JSON 前端框架动态规则',
+    JSON前端库动态规则: 'JSON 前端库动态规则',
+    JSON前端框架规则: 'JSON 前端框架规则',
+    JSON前端补充规则: 'JSON 前端补充规则',
+    派生推断: '派生推断',
+    主题样式表: '主题样式表'
+  }
 }

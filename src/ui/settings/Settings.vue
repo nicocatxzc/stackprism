@@ -57,7 +57,7 @@
       <div>
         <h2>{{ t('settings.disabledTech') }}</h2>
         <p class="hint">{{ t('settings.disabledTechHint') }}</p>
-        <Textarea v-model="disabledTechnologiesText" :rows="9" placeholder="例如：&#10;Google Analytics&#10;WordPress 插件: akismet" />
+        <Textarea v-model="disabledTechnologiesText" :rows="9" :placeholder="t('settings.disabledTechPlaceholder')" />
       </div>
       <div>
         <h2>{{ t('settings.customCss') }}</h2>
@@ -77,32 +77,32 @@
 
       <div class="rule-form">
         <label>
-          <span>技术名称</span>
-          <Input v-model="form.name" placeholder="例如：MyCMS" />
+          <span>{{ t('settings.form.name') }}</span>
+          <Input v-model="form.name" :placeholder="t('settings.form.namePlaceholder')" />
         </label>
         <label>
-          <span>分类</span>
-          <Select v-model="form.category" :options="categoryOptions" creatable placeholder="例如：网站程序" />
+          <span>{{ t('settings.form.category') }}</span>
+          <Select v-model="form.category" :options="categoryOptions" creatable :placeholder="t('settings.form.categoryPlaceholder')" />
         </label>
         <label>
-          <span>类型说明</span>
-          <Input v-model="form.kind" placeholder="例如：自定义 CMS" />
+          <span>{{ t('settings.form.kind') }}</span>
+          <Input v-model="form.kind" :placeholder="t('settings.form.kindPlaceholder')" />
         </label>
         <label>
-          <span>置信度</span>
+          <span>{{ t('settings.form.confidence') }}</span>
           <Select v-model="form.confidence" :options="confidenceOptions" />
         </label>
         <label>
-          <span>匹配方式</span>
+          <span>{{ t('settings.form.matchType') }}</span>
           <Select v-model="form.matchType" :options="matchTypeOptions" />
         </label>
         <label>
-          <span>官网 / 仓库 URL</span>
+          <span>{{ t('settings.form.url') }}</span>
           <Input v-model="form.url" type="url" placeholder="https://example.com" />
         </label>
       </div>
 
-      <div class="match-targets" aria-label="匹配范围">
+      <div class="match-targets" :aria-label="t('settings.form.matchTargets')">
         <label v-for="target in MATCH_TARGETS" :key="target.value">
           <Checkbox v-model="form.matchIn" :value="target.value" />
           {{ target.label }}
@@ -111,15 +111,15 @@
 
       <div class="rule-textareas">
         <label>
-          <span>匹配规则，每行一个</span>
+          <span>{{ t('settings.form.patterns') }}</span>
           <Textarea v-model="form.patterns" :rows="7" placeholder="wp-content/themes/my-theme&#10;X-Generator: MyCMS" />
         </label>
         <label>
-          <span>CSS 选择器，每行一个</span>
+          <span>{{ t('settings.form.selectors') }}</span>
           <Textarea v-model="form.selectors" :rows="7" placeholder="[data-powered-by='mycms']&#10;.mycms-root" />
         </label>
         <label>
-          <span>全局变量，每行一个</span>
+          <span>{{ t('settings.form.globals') }}</span>
           <Textarea v-model="form.globals" :rows="7" placeholder="MyCMS&#10;myApp.version" />
         </label>
       </div>
@@ -188,18 +188,18 @@
     { value: 'resources', label: t('settings.form.targets.resources') },
     { value: 'html', label: t('settings.form.targets.html') },
     { value: 'headers', label: t('settings.form.targets.headers') },
-    { value: 'dynamic', label: t('settings.form.targets.dynamic') },
+    { value: 'dynamic', label: t('settings.form.targets.dynamic') }
   ]
 
   const confidenceOptions = [
     { value: '高', label: t('settings.form.confidenceHigh') },
     { value: '中', label: t('settings.form.confidenceMid') },
-    { value: '低', label: t('settings.form.confidenceLow') },
+    { value: '低', label: t('settings.form.confidenceLow') }
   ]
 
   const matchTypeOptions = [
     { value: 'regex', label: t('settings.form.matchRegex') },
-    { value: 'keyword', label: t('settings.form.matchKeyword') },
+    { value: 'keyword', label: t('settings.form.matchKeyword') }
   ]
 
   const categoryOptions = CATEGORY_ORDER.map(cat => ({ value: cat, label: cat }))
@@ -240,9 +240,10 @@
   const enabledCategories = reactive<Record<string, boolean>>({})
 
   const ruleListLines = computed(() =>
-    state.settings.customRules.map(
-      rule => `${rule.category} · ${rule.kind} · ${rule.confidence} · ${rule.matchType} · ${rule.patterns.length} 条匹配规则`
-    )
+    state.settings.customRules.map(rule => {
+      const count = t('settings.form.rulePatterns', { count: rule.patterns.length })
+      return `${rule.category} · ${rule.kind} · ${rule.confidence} · ${rule.matchType} · ${count}`
+    })
   )
 
   const lines = (value: string) => {

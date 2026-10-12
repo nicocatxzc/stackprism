@@ -134,8 +134,8 @@
               </div>
               <section v-for="group in filteredSections" :key="group.category" class="category">
                 <h2>
-                  <span>{{ group.category }}</span>
-                  <span class="count">{{ group.items.length }} 项</span>
+                  <span>{{ tCat(group.category) }}</span>
+                  <span class="count">{{ t('count', { n: group.items.length }) }}</span>
                 </h2>
                 <div class="tech-grid">
                   <button
@@ -362,7 +362,7 @@
   import { SUPPORTED_LOCALES, setStoredLocale, type SupportedLocale } from '@/i18n'
   import { formatTechStackReport } from '@/utils/format-tech-stack'
 
-  const { t, locale } = useI18n({ useScope: 'global' })
+  const { t, locale, tm } = useI18n({ useScope: 'global' })
 
   const showLangMenu = ref(false)
 
@@ -370,6 +370,26 @@
     locale.value = code
     showLangMenu.value = false
     await setStoredLocale(code)
+  }
+
+  // 把后台返回的中文分类名翻译成当前语言
+  const tCat = (zhName: string): string => {
+    const map = tm('categoryMap') as Record<string, string> | undefined
+    return (map && map[zhName]) || zhName
+  }
+
+  // 把后台返回的中文来源字符串翻译成当前语言
+  const tSource = (zhSource: string): string => {
+    if (!zhSource) return zhSource
+    const map = tm('sourceMap') as Record<string, string> | undefined
+    if (!map) return zhSource
+    // 精确匹配
+    if (map[zhSource]) return map[zhSource]
+    // 前缀匹配（如"动态监控 · 页面交互后"）
+    for (const [key, val] of Object.entries(map)) {
+      if (zhSource.startsWith(key)) return val + zhSource.slice(key.length)
+    }
+    return zhSource
   }
   const RAW_LOADING_TEXT = t('state.loadingRaw')
 

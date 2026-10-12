@@ -124,5 +124,43 @@ export default {
     openSettings: 'Otwórz ustawienia',
     github: 'Repozytorium GitHub'
   },
-  lang: { label: 'Język' }
+  lang: { label: 'Język' },
+  categoryMap: {
+    前端框架: 'Framework frontend',
+    'UI / CSS 框架': 'Framework UI / CSS',
+    前端库: 'Biblioteka frontend',
+    构建与运行时: 'Build i runtime',
+    'CDN / 托管': 'CDN / Hosting',
+    'WAF / 防火墙': 'WAF / Zapora',
+    'Web 服务器': 'Serwer WWW',
+    '后端 / 服务器框架': 'Framework backend',
+    '开发语言 / 运行时': 'Język / Runtime',
+    网站程序: 'CMS / Aplikacja web',
+    '主题 / 模板': 'Motyw / Szablon',
+    网站源码线索: 'Wskazówki w kodzie',
+    '探针 / 监控': 'APM / Monitoring',
+    'CMS / 电商平台': 'CMS / E-commerce',
+    'RSS / 订阅': 'RSS / Kanał',
+    'SaaS / 第三方服务': 'SaaS / Zewnętrzne',
+    'AI / 大模型': 'AI / LLM',
+    '第三方登录 / OAuth': 'Logowanie społecznościowe / OAuth',
+    支付系统: 'Płatności',
+    '广告 / 营销': 'Reklama / Marketing',
+    '统计 / 分析': 'Analytics',
+    分析与标签: 'Menedżer tagów',
+    安全与协议: 'Bezpieczeństwo / Protokół',
+    其他库: 'Inne biblioteki'
+  },
+  sourceMap: {
+    页面扫描: 'Skanowanie strony',
+    'JS 版权注释': 'Copyright JS',
+    动态监控: 'Monitorowanie dynamiczne',
+    'JSON 动态技术规则': 'Reguła JSON dyn.',
+    'JSON 前端框架动态规则': 'Reguła JSON frontend dyn.',
+    'JSON 前端库动态规则': 'Reguła JSON lib. dyn.',
+    'JSON 前端框架规则': 'Reguła JSON frontend',
+    'JSON 前端补充规则': 'Reguła JSON uzupeł.',
+    派生推断: 'Wnioskowanie',
+    主题样式表: 'Arkusz stylów motywu'
+  }
 }

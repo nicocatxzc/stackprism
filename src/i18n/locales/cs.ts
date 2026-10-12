@@ -124,5 +124,43 @@ export default {
     openSettings: 'Otevřít nastavení',
     github: 'GitHub repozitář'
   },
-  lang: { label: 'Jazyk' }
+  lang: { label: 'Jazyk' },
+  categoryMap: {
+    前端框架: 'Frontend framework',
+    'UI / CSS 框架': 'UI / CSS framework',
+    前端库: 'Frontend knihovna',
+    构建与运行时: 'Build a runtime',
+    'CDN / 托管': 'CDN / Hosting',
+    'WAF / 防火墙': 'WAF / Firewall',
+    'Web 服务器': 'Webový server',
+    '后端 / 服务器框架': 'Backend framework',
+    '开发语言 / 运行时': 'Jazyk / Runtime',
+    网站程序: 'CMS / Webová aplikace',
+    '主题 / 模板': 'Téma / Šablona',
+    网站源码线索: 'Stopy ve zdrojovém kódu',
+    '探针 / 监控': 'APM / Monitoring',
+    'CMS / 电商平台': 'CMS / E-commerce',
+    'RSS / 订阅': 'RSS / Kanál',
+    'SaaS / 第三方服务': 'SaaS / Třetí strany',
+    'AI / 大模型': 'AI / LLM',
+    '第三方登录 / OAuth': 'Sociální přihlášení / OAuth',
+    支付系统: 'Platební systém',
+    '广告 / 营销': 'Reklama / Marketing',
+    '统计 / 分析': 'Analytics',
+    分析与标签: 'Správce tagů',
+    安全与协议: 'Bezpečnost / Protokol',
+    其他库: 'Ostatní knihovny'
+  },
+  sourceMap: {
+    页面扫描: 'Skenování stránky',
+    'JS 版权注释': 'JS copyright',
+    动态监控: 'Dynamické sledování',
+    'JSON 动态技术规则': 'JSON dyn. pravidlo',
+    'JSON 前端框架动态规则': 'JSON frontend dyn. pravidlo',
+    'JSON 前端库动态规则': 'JSON lib. dyn. pravidlo',
+    'JSON 前端框架规则': 'JSON frontend pravidlo',
+    'JSON 前端补充规则': 'JSON doplňující pravidlo',
+    派生推断: 'Inference',
+    主题样式表: 'Šablona stylů tématu'
+  }
 }
