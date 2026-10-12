@@ -114,6 +114,13 @@
             "classPrefixes": ["ri-"]
           },
           {
+            "name": "Lucide Icons",
+            "patterns": [
+              "(?:^|/)lucide(?:-react|-vue|-svelte|-angular|-solid)?(?:@[^/\\s\"'<>]+)?/.+\\.(?:m?js|cjs)(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)"
+            ],
+            "classPrefixes": ["lucide-"]
+          },
+          {
             "name": "spin.js",
             "patterns": ["(?:^|/)spin(?:\\.min\\d*)?\\.js(?:[?#][^\\s\"'<>]*)?(?:[\"'<>\\s]|$)"]
           },
