@@ -3,16 +3,16 @@
     <div class="help-header-inner">
       <div>
         <h1>
-          StackPrism 使用说明
+          {{ t('help.title') }}
           <span v-if="version" class="version-badge">v{{ version }}</span>
         </h1>
         <p>这页专门讲怎么添加自己的识别规则。你可以把规则理解成一句话：看到什么字，就认为网页用了什么东西。</p>
       </div>
       <div class="header-actions">
-        <RippleButton class="icon-btn primary" variant="primary" title="打开设置页" @click="openSettings">
+        <RippleButton class="icon-btn primary" variant="primary" :title="t('help.openSettings')" @click="openSettings">
           <Settings2 :size="16" :stroke-width="2" />
         </RippleButton>
-        <RippleButton class="icon-btn" title="GitHub 仓库" @click="openRepo">
+        <RippleButton class="icon-btn" :title="t('help.github')" @click="openRepo">
           <ExternalLink :size="16" :stroke-width="2" />
         </RippleButton>
       </div>
@@ -340,9 +340,12 @@ examplepay-sdk</pre
 
 <script setup lang="ts">
   import { onMounted, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { ExternalLink, Settings2 } from 'lucide-vue-next'
   import RippleButton from '@/ui/components/RippleButton.vue'
   import { REPOSITORY_URL } from '@/utils/constants'
+
+  const { t } = useI18n()
 
   const version = ref('')
 

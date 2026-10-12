@@ -3,33 +3,33 @@
     <div class="settings-header-inner">
       <div>
         <h1>
-          StackPrism 设置
+          {{ t('settings.title') }}
           <span v-if="version" class="version-badge">v{{ version }}</span>
         </h1>
-        <p>控制识别分类，添加自定义规则，并覆盖弹窗样式。</p>
+        <p>{{ t('settings.subtitle') }}</p>
       </div>
       <div class="header-actions">
-        <RippleButton :title="`主题：${themeLabel(theme)}（点击切换）`" @click="toggleTheme">
+        <RippleButton :title="`${t('theme.labelPrefix')}${themeLabel(theme)}（点击切换）`" @click="toggleTheme">
           <Sun v-if="theme === 'light'" :size="14" :stroke-width="2" />
           <Moon v-else-if="theme === 'dark'" :size="14" :stroke-width="2" />
           <Monitor v-else :size="14" :stroke-width="2" />
-          <span>主题：{{ themeLabel(theme) }}</span>
+          <span>{{ t('theme.labelPrefix') }}{{ themeLabel(theme) }}</span>
         </RippleButton>
         <RippleButton @click="openHelp">
           <BookOpen :size="14" :stroke-width="2" />
-          <span>使用说明</span>
+          <span>{{ t('settings.help') }}</span>
         </RippleButton>
-        <RippleButton title="GitHub 仓库" @click="openRepository">
+        <RippleButton :title="t('settings.github')" @click="openRepository">
           <ExternalLink :size="14" :stroke-width="2" />
-          <span>GitHub 仓库</span>
+          <span>{{ t('settings.github') }}</span>
         </RippleButton>
         <RippleButton class="primary" variant="primary" @click="saveSettings">
           <Save :size="14" :stroke-width="2" />
-          <span>保存设置</span>
+          <span>{{ t('settings.save') }}</span>
         </RippleButton>
         <RippleButton @click="resetSettings">
           <RotateCcw :size="14" :stroke-width="2" />
-          <span>恢复默认</span>
+          <span>{{ t('settings.reset') }}</span>
         </RippleButton>
       </div>
     </div>
@@ -39,10 +39,10 @@
 
     <section class="panel">
       <div class="panel-head">
-        <h2>识别开关</h2>
+        <h2>{{ t('settings.toggleSection') }}</h2>
         <div class="inline-actions">
-          <RippleButton @click="setAllCategories(true)">全开</RippleButton>
-          <RippleButton @click="setAllCategories(false)">全关</RippleButton>
+          <RippleButton @click="setAllCategories(true)">{{ t('settings.allOn') }}</RippleButton>
+          <RippleButton @click="setAllCategories(false)">{{ t('settings.allOff') }}</RippleButton>
         </div>
       </div>
       <div class="category-grid">
@@ -55,23 +55,23 @@
 
     <section class="panel two-column">
       <div>
-        <h2>禁用指定技术</h2>
-        <p class="hint">每行一个技术名称。名称匹配后不会在结果里显示。</p>
+        <h2>{{ t('settings.disabledTech') }}</h2>
+        <p class="hint">{{ t('settings.disabledTechHint') }}</p>
         <Textarea v-model="disabledTechnologiesText" :rows="9" placeholder="例如：&#10;Google Analytics&#10;WordPress 插件: akismet" />
       </div>
       <div>
-        <h2>自定义样式 CSS</h2>
-        <p class="hint">保存后会应用到弹窗和设置页。留空则不覆盖样式。</p>
+        <h2>{{ t('settings.customCss') }}</h2>
+        <p class="hint">{{ t('settings.customCssHint') }}</p>
         <Textarea v-model="customCssText" :rows="9" placeholder=".tech-name { color: #0f766e; }" />
       </div>
     </section>
 
     <section class="panel">
       <div class="panel-head">
-        <h2>自定义规则</h2>
+        <h2>{{ t('settings.customRules') }}</h2>
         <div class="inline-actions">
-          <RippleButton @click="openContribute">提交规则贡献</RippleButton>
-          <RippleButton @click="clearRuleForm">清空表单</RippleButton>
+          <RippleButton @click="openContribute">{{ t('settings.contribute') }}</RippleButton>
+          <RippleButton @click="clearRuleForm">{{ t('settings.clearForm') }}</RippleButton>
         </div>
       </div>
 
@@ -125,14 +125,14 @@
       </div>
 
       <div class="form-actions">
-        <RippleButton class="primary" variant="primary" @click="addRuleFromForm">添加规则</RippleButton>
-        <RippleButton @click="updateRuleFromForm">更新当前规则</RippleButton>
+        <RippleButton class="primary" variant="primary" @click="addRuleFromForm">{{ t('settings.form.addRule') }}</RippleButton>
+        <RippleButton @click="updateRuleFromForm">{{ t('settings.form.updateRule') }}</RippleButton>
       </div>
 
       <div class="rules-list">
         <div v-if="!state.settings.customRules.length" class="rules-empty">
           <Inbox class="rules-empty-icon" :size="28" :stroke-width="1.5" />
-          <span>暂无自定义规则</span>
+          <span>{{ t('state.noCustomRules') }}</span>
         </div>
         <div v-for="(rule, index) in state.settings.customRules" :key="`${rule.name}|${index}`" class="rule-row">
           <div>
@@ -140,10 +140,10 @@
             <div class="rule-meta">{{ ruleListLines[index] }}</div>
           </div>
           <div class="rule-actions">
-            <RippleButton class="icon-btn" title="编辑此规则" @click="fillRuleForm(rule, index)">
+            <RippleButton class="icon-btn" :title="t('settings.editRule')" @click="fillRuleForm(rule, index)">
               <Pencil :size="14" :stroke-width="2" />
             </RippleButton>
-            <RippleButton class="icon-btn danger" variant="danger" title="删除此规则" @click="deleteRule(index)">
+            <RippleButton class="icon-btn danger" variant="danger" :title="t('settings.deleteRule')" @click="deleteRule(index)">
               <Trash2 :size="14" :stroke-width="2" />
             </RippleButton>
           </div>
@@ -153,10 +153,10 @@
 
     <section class="panel">
       <div class="panel-head">
-        <h2>规则 JSON</h2>
+        <h2>{{ t('settings.rulesJson') }}</h2>
         <div class="inline-actions">
-          <RippleButton @click="importRulesJson">从 JSON 导入</RippleButton>
-          <RippleButton @click="formatRulesJson">格式化</RippleButton>
+          <RippleButton @click="importRulesJson">{{ t('settings.importJson') }}</RippleButton>
+          <RippleButton @click="formatRulesJson">{{ t('settings.formatJson') }}</RippleButton>
         </div>
       </div>
       <Textarea v-model="rulesJsonText" :rows="13" />
@@ -166,6 +166,7 @@
 
 <script setup lang="ts">
   import { onMounted, reactive, ref, watch, computed } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { BookOpen, ExternalLink, Inbox, Monitor, Moon, Pencil, RotateCcw, Save, Sun, Trash2 } from 'lucide-vue-next'
   import Select from '@/ui/components/Select.vue'
   import Checkbox from '@/ui/components/Checkbox.vue'
@@ -180,23 +181,25 @@
   import { ALLOWED_CONFIDENCES, ALLOWED_MATCH_TARGETS, ALLOWED_MATCH_TYPES, CUSTOM_RULE_LIMITS } from '@/types/settings'
   import { cycleTheme, getStoredTheme, setStoredTheme, themeLabel, type ThemeMode } from '@/utils/theme'
 
+  const { t } = useI18n()
+
   const MATCH_TARGETS = [
-    { value: 'url', label: '页面 URL' },
-    { value: 'resources', label: '资源 URL' },
-    { value: 'html', label: 'DOM / 源码' },
-    { value: 'headers', label: '响应头' },
-    { value: 'dynamic', label: '动态资源' }
+    { value: 'url', label: t('settings.form.targets.url') },
+    { value: 'resources', label: t('settings.form.targets.resources') },
+    { value: 'html', label: t('settings.form.targets.html') },
+    { value: 'headers', label: t('settings.form.targets.headers') },
+    { value: 'dynamic', label: t('settings.form.targets.dynamic') },
   ]
 
   const confidenceOptions = [
-    { value: '高', label: '高' },
-    { value: '中', label: '中' },
-    { value: '低', label: '低' }
+    { value: '高', label: t('settings.form.confidenceHigh') },
+    { value: '中', label: t('settings.form.confidenceMid') },
+    { value: '低', label: t('settings.form.confidenceLow') },
   ]
 
   const matchTypeOptions = [
-    { value: 'regex', label: '正则表达式' },
-    { value: 'keyword', label: '关键词' }
+    { value: 'regex', label: t('settings.form.matchRegex') },
+    { value: 'keyword', label: t('settings.form.matchKeyword') },
   ]
 
   const categoryOptions = CATEGORY_ORDER.map(cat => ({ value: cat, label: cat }))

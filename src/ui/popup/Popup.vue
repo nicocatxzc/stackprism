@@ -9,18 +9,18 @@
         <p class="url">{{ pageUrl }}</p>
       </div>
       <div class="actions">
-        <RippleButton class="icon-btn" :title="`主题：${themeLabel(theme)}（点击切换）`" @click="toggleTheme">
+        <RippleButton class="icon-btn" :title="t('theme.toggle', { label: themeLabel(theme) })" @click="toggleTheme">
           <Sun v-if="theme === 'light'" :size="16" :stroke-width="2" />
           <Moon v-else-if="theme === 'dark'" :size="16" :stroke-width="2" />
           <Monitor v-else :size="16" :stroke-width="2" />
         </RippleButton>
-        <RippleButton class="icon-btn" title="打开设置页" @click="openSettings">
+        <RippleButton class="icon-btn" :title="t('nav.openSettings')" @click="openSettings">
           <Settings2 :size="16" :stroke-width="2" />
         </RippleButton>
-        <RippleButton class="icon-btn" title="复制当前页 URL" @click="copyResult">
+        <RippleButton class="icon-btn" :title="t('nav.copyUrl')" @click="copyResult">
           <Copy :size="16" :stroke-width="2" />
         </RippleButton>
-        <RippleButton class="icon-btn primary" variant="primary" title="重新检测" @click="runDetection({ force: true })">
+        <RippleButton class="icon-btn primary" variant="primary" :title="t('nav.redetect')" @click="runDetection({ force: true })">
           <RefreshCw :size="16" :stroke-width="2" />
         </RippleButton>
       </div>
@@ -28,9 +28,9 @@
 
     <div v-if="!state.pageSupported" class="unsupported">
       <Ban class="empty-icon" :size="36" :stroke-width="1.5" />
-      <h2>当前页面不支持检测</h2>
+      <h2>{{ t('state.unsupported') }}</h2>
       <p>{{ unsupportedReason }}</p>
-      <p class="unsupported-hint">在普通网页（http:// 或 https://）上重新打开扩展即可。</p>
+      <p class="unsupported-hint">{{ t('state.unsupportedHint') }}</p>
     </div>
 
     <template v-else>
@@ -42,35 +42,35 @@
 
       <div v-if="isLoading" class="loading">
         <Loader2 class="loading-spinner" :size="28" :stroke-width="1.8" />
-        <p>正在读取后台缓存...</p>
+        <p>{{ t('state.loading') }}</p>
       </div>
 
       <template v-else>
         <section class="summary" aria-label="检测概览">
           <RippleButton
             :class="['summary-tile', { active: state.activeCategory === FOCUS_CATEGORY && !footerPanel }]"
-            title="返回重点列表"
+            :title="t('summary.focusTitle')"
             @click="focusTechnologyList"
           >
             <span>{{ animatedTotal }}</span>
-            <label>技术</label>
+            <label>{{ t('summary.tech') }}</label>
           </RippleButton>
           <RippleButton
             :class="['summary-tile', { active: footerPanel === 'resources' }]"
-            title="查看抓取到的资源列表"
+            :title="t('summary.resourcesTitle')"
             @click="openSummaryDetail('resources')"
           >
             <span>{{ animatedResource }}</span>
-            <label>资源</label>
+            <label>{{ t('summary.resources') }}</label>
           </RippleButton>
           <RippleButton
             :class="['summary-tile', { active: footerPanel === 'headers' }]"
-            title="查看主文档响应头"
+            :title="t('summary.headersTitle')"
             @click="openSummaryDetail('headers')"
           >
             <span>{{ animatedHeader }}</span>
             <label class="summary-label">
-              响应头
+              {{ t('summary.headers') }}
               <Loader2 v-if="isDetecting" class="detection-spinner" :size="12" :stroke-width="2" />
             </label>
           </RippleButton>
@@ -79,26 +79,26 @@
         <nav class="filter-bar" aria-label="技术分类过滤">
           <div class="segment" role="tablist">
             <RippleButton
-              role="tab"
-              :class="['segment-btn', { active: state.activeCategory === FOCUS_CATEGORY }]"
-              :aria-selected="state.activeCategory === FOCUS_CATEGORY"
-              @click="selectCategory(FOCUS_CATEGORY)"
-            >
-              <span>重点</span>
-              <span class="segment-count">{{ focusCount }}</span>
-            </RippleButton>
-            <RippleButton
-              role="tab"
-              :class="['segment-btn', { active: state.activeCategory === '全部' }]"
-              :aria-selected="state.activeCategory === '全部'"
-              @click="selectCategory('全部')"
-            >
-              <span>全部</span>
-              <span class="segment-count">{{ totalCount }}</span>
-            </RippleButton>
+            role="tab"
+            :class="['segment-btn', { active: state.activeCategory === FOCUS_CATEGORY }]"
+            :aria-selected="state.activeCategory === FOCUS_CATEGORY"
+            @click="selectCategory(FOCUS_CATEGORY)"
+          >
+            <span>{{ t('summary.focus') }}</span>
+            <span class="segment-count">{{ focusCount }}</span>
+          </RippleButton>
+          <RippleButton
+            role="tab"
+            :class="['segment-btn', { active: state.activeCategory === allCategory }]"
+            :aria-selected="state.activeCategory === allCategory"
+            @click="selectCategory(allCategory)"
+          >
+            <span>{{ t('summary.all') }}</span>
+            <span class="segment-count">{{ totalCount }}</span>
+          </RippleButton>
           </div>
           <div class="filter-select">
-            <Select v-model="categoryFilterValue" :options="categoryFilterOptions" placeholder="选择分类" />
+            <Select v-model="categoryFilterValue" :options="categoryFilterOptions" :placeholder="t('summary.selectCategory')" />
           </div>
         </nav>
 
@@ -107,12 +107,12 @@
             <section :key="`${state.activeCategory}|${filteredSections.length ? 'd' : 'e'}`" class="sections">
               <div v-if="!state.result?.technologies?.length" class="empty">
                 <SearchX class="empty-icon" :size="32" :stroke-width="1.5" />
-                <p>未检测到明确技术线索</p>
-                <p class="empty-hint">刷新页面后重新打开插件，以便捕获主文档响应头。</p>
+                <p>{{ t('state.noTech') }}</p>
+                <p class="empty-hint">{{ t('state.noTechHint') }}</p>
               </div>
               <div v-else-if="!filteredSections.length" class="empty">
                 <Inbox class="empty-icon" :size="28" :stroke-width="1.5" />
-                <p>当前分类没有检测结果</p>
+                <p>{{ t('state.noCategoryResult') }}</p>
               </div>
               <section v-for="group in filteredSections" :key="group.category" class="category">
                 <h2>
@@ -125,7 +125,7 @@
                     :key="`${tech.name}|${tech.category}`"
                     type="button"
                     class="tech-row"
-                    :title="`查看 ${tech.name} 详情`"
+                    :title="t('detail.viewDetail', { name: tech.name })"
                     @click="openTechDetail(tech)"
                   >
                     <TechChip :name="tech.name" :url="tech.url" />
@@ -157,34 +157,34 @@
         <header class="footer-panel-head">
           <span class="footer-panel-title">{{ footerPanelTitle }}</span>
           <div class="footer-panel-actions">
-            <RippleButton v-if="footerPanel === 'raw'" class="footer-panel-copy" title="下载原始线索" @click="downloadRawOutput">
+            <RippleButton v-if="footerPanel === 'raw'" class="footer-panel-copy" :title="t('footer.downloadRaw')" @click="downloadRawOutput">
               <Download :size="12" :stroke-width="2" />
             </RippleButton>
-            <RippleButton v-if="footerPanel === 'raw'" class="footer-panel-copy" title="复制原始线索" @click="copyRawOutput">
+            <RippleButton v-if="footerPanel === 'raw'" class="footer-panel-copy" :title="t('footer.copyRaw')" @click="copyRawOutput">
               <Copy :size="12" :stroke-width="2" />
             </RippleButton>
-            <RippleButton class="footer-panel-close" title="关闭面板" @click="closeFooterPanel">
+            <RippleButton class="footer-panel-close" :title="t('footer.close')" @click="closeFooterPanel">
               <X :size="14" :stroke-width="2" />
             </RippleButton>
           </div>
         </header>
-        <div v-if="footerPanel === 'search'" class="footer-panel-body">
+          <div v-if="footerPanel === 'search'" class="footer-panel-body">
           <div class="search-row">
-            <Input v-model="search.query" type="search" placeholder="输入关键词或正则表达式" @keydown="onSearchKeydown" />
-            <RippleButton @click="searchPageSourceFromPopup">搜索</RippleButton>
+            <Input v-model="search.query" type="search" :placeholder="t('search.placeholder')" @keydown="onSearchKeydown" />
+            <RippleButton @click="searchPageSourceFromPopup">{{ t('footer.search') }}</RippleButton>
           </div>
           <div class="search-options">
             <label>
               <Checkbox v-model="search.caseSensitive" />
-              区分大小写
+              {{ t('search.caseSensitive') }}
             </label>
             <label>
               <Checkbox v-model="search.wholeWord" />
-              全字匹配
+              {{ t('search.wholeWord') }}
             </label>
             <label>
               <Checkbox v-model="search.useRegex" />
-              正则表达式
+              {{ t('search.useRegex') }}
             </label>
           </div>
           <div class="search-meta">{{ search.meta }}</div>
@@ -194,8 +194,8 @@
           <pre>{{ rawOutputText }}</pre>
         </div>
         <div v-else-if="footerPanel === 'resources'" class="footer-panel-body detail-body">
-          <div v-if="detailLoading" class="detail-empty">正在加载...</div>
-          <div v-else-if="!detailResources.length" class="detail-empty">未抓取到资源。</div>
+          <div v-if="detailLoading" class="detail-empty">{{ t('state.loadingDetail') }}</div>
+          <div v-else-if="!detailResources.length" class="detail-empty">{{ t('state.noResources') }}</div>
           <ul v-else class="resource-list">
             <li v-for="url in detailResources" :key="url">
               <button type="button" class="resource-link" :title="url" @click="openResourceLink(url)">
@@ -206,8 +206,8 @@
           </ul>
         </div>
         <div v-else-if="footerPanel === 'headers'" class="footer-panel-body detail-body">
-          <div v-if="detailLoading" class="detail-empty">正在加载...</div>
-          <div v-else-if="!Object.keys(detailHeaders).length" class="detail-empty">没有主文档响应头数据；可点击"刷新"重新抓取。</div>
+          <div v-if="detailLoading" class="detail-empty">{{ t('state.loadingDetail') }}</div>
+          <div v-else-if="!Object.keys(detailHeaders).length" class="detail-empty">{{ t('state.noHeaders') }}</div>
           <dl v-else class="header-list">
             <template v-for="(value, key) in detailHeaders" :key="key">
               <dt>{{ key }}</dt>
@@ -222,33 +222,33 @@
               <span class="tech-detail-category">{{ selectedTech.category }}</span>
               <span class="tech-detail-name">{{ selectedTech.name }}</span>
             </div>
-            <span :class="['confidence', confidenceClass(selectedTech.confidence)]">{{ selectedTech.confidence }}置信度</span>
+            <span :class="['confidence', confidenceClass(selectedTech.confidence)]">{{ t('detail.confidence', { level: selectedTech.confidence }) }}</span>
           </div>
           <button
             v-if="selectedTech.url"
             type="button"
             class="tech-detail-link"
-            :title="`打开 ${selectedTech.name} 官网或仓库`"
+            :title="t('detail.openSite', { name: selectedTech.name })"
             @click="openTechnologyLink(selectedTech)"
           >
             <ExternalLink :size="12" :stroke-width="2" />
             <span>{{ selectedTech.url }}</span>
           </button>
           <section v-if="selectedTech.evidence?.length" class="tech-detail-section">
-            <h3>识别依据</h3>
+            <h3>{{ t('detail.evidence') }}</h3>
             <ul class="tech-detail-evidence">
               <li v-for="(ev, i) in selectedTech.evidence" :key="i">{{ ev }}</li>
             </ul>
           </section>
           <section v-if="selectedTech.sources?.length" class="tech-detail-section">
-            <h3>来源(点击查看原始数据)</h3>
+            <h3>{{ t('detail.sources') }}</h3>
             <div class="tech-detail-sources">
               <button
                 v-for="src in selectedTech.sources"
                 :key="src"
                 type="button"
                 class="tech-detail-source"
-                :title="`查看 ${src} 来源的原始数据`"
+                :title="t('detail.viewSource', { source: src })"
                 @click="openSourceRaw(selectedTech, src)"
               >
                 {{ src }}
@@ -258,11 +258,11 @@
           <button
             type="button"
             class="tech-detail-correction"
-            title="打开 GitHub 议题并自动填写这条识别结果"
+            title=""
             @click="openCorrectionIssue(selectedTech)"
           >
             <Flag :size="12" :stroke-width="2" />
-            <span>识别不准确，点击纠正</span>
+            <span>{{ t('detail.correct') }}</span>
           </button>
         </div>
       </section>
@@ -272,23 +272,23 @@
       <div class="footer-tools">
         <RippleButton
           :class="['footer-tool-btn', { active: footerPanel === 'search' }]"
-          title="网页源代码搜索"
+          :title="t('footer.searchTitle')"
           @click="toggleFooterPanel('search')"
         >
           <Search :size="13" :stroke-width="2" />
-          <span>搜索</span>
+          <span>{{ t('footer.search') }}</span>
         </RippleButton>
         <RippleButton
           :class="['footer-tool-btn', { active: footerPanel === 'raw' }]"
-          title="查看原始线索"
+          :title="t('footer.rawTitle')"
           @click="toggleFooterPanel('raw')"
         >
           <FileCode :size="13" :stroke-width="2" />
-          <span>原始线索</span>
+          <span>{{ t('footer.raw') }}</span>
         </RippleButton>
-        <RippleButton class="footer-tool-btn" title="复制全部技术栈报告" @click="copyTechStackReport">
+        <RippleButton class="footer-tool-btn" :title="t('footer.copyAllTitle')" @click="copyTechStackReport">
           <ClipboardList :size="13" :stroke-width="2" />
-          <span>复制全部</span>
+          <span>{{ t('footer.copyAll') }}</span>
         </RippleButton>
       </div>
       <a class="footer-repo" :href="REPOSITORY_URL" target="_blank" rel="noreferrer" @click="openRepository">GitHub</a>
@@ -298,8 +298,8 @@
 
 <script setup lang="ts">
   import { onMounted, onBeforeUnmount, reactive, ref, computed, watch, type Ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import {
-    ArrowUp,
     Ban,
     ClipboardList,
     Copy,
@@ -339,7 +339,11 @@
   import { checkPageSupport } from '@/utils/page-support'
   import { formatTechStackReport } from '@/utils/format-tech-stack'
 
-  const RAW_LOADING_TEXT = '正在请求原始线索...'
+  const { t } = useI18n()
+  const RAW_LOADING_TEXT = t('state.loadingRaw')
+
+  // 当前语言的"全部"分类标签（英语等用 'all'，中文用 '全部'）
+  const allCategory = computed(() => t('summary.all'))
 
   const state = reactive({
     result: null as any,
@@ -354,7 +358,7 @@
 
   const status = reactive({ message: '', type: '' as 'ok' | 'error' | '' })
   let statusTimer = 0
-  const pageUrl = ref('正在检测当前标签页...')
+  const pageUrl = ref(t('state.detecting'))
   const unsupportedReason = ref('')
   const version = ref('')
   const isLoading = ref(true)
@@ -364,7 +368,7 @@
     caseSensitive: false,
     wholeWord: false,
     useRegex: false,
-    meta: '搜索当前页面 DOM 源码快照。',
+    meta: t('search.meta'),
     output: ''
   })
   const rawOutputText = ref(RAW_PLACEHOLDER)
@@ -381,16 +385,16 @@
   const rawPanelTitle = computed(() => {
     if (footerPanel.value !== 'raw') return ''
     const ctx = rawSourceContext.value
-    if (!ctx) return '原始线索'
-    return `原始线索 · ${ctx.tech?.name || ''} · ${ctx.source}`
+    if (!ctx) return t('footer.raw')
+    return `${t('footer.raw')} · ${ctx.tech?.name || ''} · ${ctx.source}`
   })
 
   const footerPanelTitle = computed(() => {
-    if (footerPanel.value === 'search') return '网页源代码搜索'
+    if (footerPanel.value === 'search') return t('footer.searchTitle')
     if (footerPanel.value === 'raw') return rawPanelTitle.value
-    if (footerPanel.value === 'resources') return `资源列表（${detailResources.value.length}）`
-    if (footerPanel.value === 'headers') return `响应头（${Object.keys(detailHeaders.value).length}）`
-    if (footerPanel.value === 'tech') return selectedTech.value?.name || '技术详情'
+    if (footerPanel.value === 'resources') return `${t('summary.resources')}（${detailResources.value.length}）`
+    if (footerPanel.value === 'headers') return `${t('summary.headers')}（${Object.keys(detailHeaders.value).length}）`
+    if (footerPanel.value === 'tech') return selectedTech.value?.name || t('app.title')
     return ''
   })
 
@@ -565,7 +569,7 @@
   const categoryFilterValue = computed({
     get: () => {
       const cat = state.activeCategory
-      if (cat === FOCUS_CATEGORY || cat === '全部') return ''
+      if (cat === FOCUS_CATEGORY || cat === allCategory.value) return ''
       return cat
     },
     set: value => {
@@ -573,7 +577,7 @@
         state.activeCategory = FOCUS_CATEGORY
         return
       }
-      if (value !== FOCUS_CATEGORY && value !== '全部') {
+      if (value !== FOCUS_CATEGORY && value !== allCategory.value) {
         state.activeCategory = value
       }
     }
@@ -601,7 +605,7 @@
 
   const getFilteredTechnologies = (result: any) => {
     if (state.activeCategory === FOCUS_CATEGORY) return getFocusTechnologies(result.technologies)
-    if (state.activeCategory === '全部') return result.technologies
+    if (state.activeCategory === allCategory.value) return result.technologies
     return result.technologies.filter((tech: any) => tech.category === state.activeCategory)
   }
 
