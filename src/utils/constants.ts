@@ -1,6 +1,25 @@
 export const SETTINGS_STORAGE_KEY = 'stackPrismSettings'
 export const REPOSITORY_URL = 'https://github.com/setube/stackprism'
 export const RULE_CONTRIBUTION_URL = `${REPOSITORY_URL}/issues/new?template=rule_contribution.yml`
+
+const README_LOCALES: Record<string, string> = {
+  'zh-CN': '',
+  'en': '',
+  'zh-TW': 'i18n/README.zh-TW.md',
+  'ja': 'i18n/README.ja.md',
+  'fr': 'i18n/README.fr.md',
+  'de': 'i18n/README.de.md',
+  'pt': 'i18n/README.pt.md',
+  'it': 'i18n/README.it.md',
+  'cs': 'i18n/README.cs.md',
+  'pl': 'i18n/README.pl.md',
+}
+
+export const getReadmeUrl = (locale: string): string => {
+  const path = README_LOCALES[locale]
+  if (path) return `${REPOSITORY_URL}/blob/main/${path}`
+  return REPOSITORY_URL
+}
 export const DETECTION_CORRECTION_TEMPLATE = 'detection_correction.md'
 
 export const FOCUS_CATEGORY = '重点'

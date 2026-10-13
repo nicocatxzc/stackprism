@@ -15,6 +15,7 @@ export default defineConfig({
       { text: '使用指南', link: '/guide/' },
       { text: '配置指南', link: '/config/' },
       { text: '开发手册', link: '/dev/' },
+      { text: '提交议题', link: '/feedback' },
       { text: 'GitHub', link: 'https://github.com/setube/stackprism' }
     ],
     sidebar: {

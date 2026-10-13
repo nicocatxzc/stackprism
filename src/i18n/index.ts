@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
 import zhCN from './locales/zh-CN'
 import zhTW from './locales/zh-TW'
+import en from './locales/en'
 import ja from './locales/ja'
 import fr from './locales/fr'
 import de from './locales/de'
@@ -12,6 +13,7 @@ import pl from './locales/pl'
 export const SUPPORTED_LOCALES = [
   { code: 'zh-CN', label: '简体中文' },
   { code: 'zh-TW', label: '繁體中文' },
+  { code: 'en', label: 'English' },
   { code: 'ja', label: '日本語' },
   { code: 'fr', label: 'Français' },
   { code: 'de', label: 'Deutsch' },
@@ -33,7 +35,7 @@ export const getSupportedLocale = (lang: string): SupportedLocale => {
   for (const { code } of SUPPORTED_LOCALES) {
     if (lower.startsWith(code.split('-')[0])) return code as SupportedLocale
   }
-  return 'zh-CN'
+  return 'en'
 }
 
 export const getStoredLocale = async (): Promise<SupportedLocale> => {
@@ -55,6 +57,6 @@ export const createAppI18n = (locale: SupportedLocale) =>
   createI18n({
     legacy: false,
     locale,
-    fallbackLocale: 'zh-CN',
-    messages: { 'zh-CN': zhCN, 'zh-TW': zhTW, ja, fr, de, pt, it, cs, pl }
+    fallbackLocale: 'en',
+    messages: { 'zh-CN': zhCN, 'zh-TW': zhTW, en, ja, fr, de, pt, it, cs, pl }
   })

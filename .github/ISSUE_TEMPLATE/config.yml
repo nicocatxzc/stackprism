@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: 提交议题（多语言表单）
+    url: https://setube.github.io/stackprism/feedback
+    about: 贡献规则、反馈 Bug、提建议——支持 10 种语言。
   - name: GitHub 仓库
     url: https://github.com/setube/stackprism
     about: 查看项目代码、提交记录和最新说明。
