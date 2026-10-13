@@ -103,7 +103,7 @@
         },
         {
           "defaults": {
-            "category": "网站源码线索",
+            "category": "智能体浏览",
             "kind": "AI 站点索引",
             "confidence": "中",
             "matchIn": ["html"]
