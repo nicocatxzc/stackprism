@@ -3,7 +3,7 @@
     <header class="topbar">
       <div>
         <h1>
-          <a class="app-title-link" :href="REPOSITORY_URL" target="_blank" rel="noreferrer" @click="openRepository">栈棱镜</a>
+          <a class="app-title-link" :href="repoUrl" target="_blank" rel="noreferrer" @click="openRepository">{{ t('app.title') }}</a>
           <span v-if="version" class="version-badge">v{{ version }}</span>
         </h1>
         <p class="url">{{ pageUrl }}</p>
@@ -17,14 +17,14 @@
         <RippleButton class="icon-btn" :title="t('nav.openSettings')" @click="openSettings">
           <Settings2 :size="16" :stroke-width="2" />
         </RippleButton>
+        <RippleButton class="icon-btn" :title="t('lang.label')" @click="showLangMenu = !showLangMenu">
+          <Languages :size="16" :stroke-width="2" />
+        </RippleButton>
         <RippleButton class="icon-btn" :title="t('nav.copyUrl')" @click="copyResult">
           <Copy :size="16" :stroke-width="2" />
         </RippleButton>
         <RippleButton class="icon-btn primary" variant="primary" :title="t('nav.redetect')" @click="runDetection({ force: true })">
           <RefreshCw :size="16" :stroke-width="2" />
-        </RippleButton>
-        <RippleButton class="icon-btn" :title="t('lang.label')" @click="showLangMenu = !showLangMenu">
-          <Languages :size="16" :stroke-width="2" />
         </RippleButton>
       </div>
       <Transition name="lang-menu">
@@ -146,7 +146,7 @@
                     :title="t('detail.viewDetail', { name: tech.name })"
                     @click="openTechDetail(tech)"
                   >
-                    <TechChip :name="tech.name" :url="tech.url" />
+                    <TechChip :name="tech.name" :display-name="tTechName(tech.name)" :url="tech.url" />
                     <span class="tech-row-name">
                       {{ tTechName(tech.name) }}
                       <span v-if="tech.version" class="tech-row-version">{{ tech.version }}</span>
@@ -240,10 +240,10 @@
         </div>
         <div v-else-if="footerPanel === 'tech' && selectedTech" class="footer-panel-body tech-detail-body">
           <div class="tech-detail-head">
-            <TechChip :name="selectedTech.name" :url="selectedTech.url" large />
+            <TechChip :name="selectedTech.name" :display-name="tTechName(selectedTech.name)" :url="selectedTech.url" large />
             <div class="tech-detail-meta">
               <span class="tech-detail-category">{{ tCat(selectedTech.category) }}</span>
-              <span class="tech-detail-name">{{ selectedTech.name }}</span>
+              <span class="tech-detail-name">{{ tTechName(selectedTech.name) }}</span>
             </div>
             <span :class="['confidence', confidenceClass(selectedTech.confidence)]">
               {{ t('detail.confidence', { level: tConfidence(selectedTech.confidence) }) }}
@@ -311,7 +311,7 @@
           <span>{{ t('footer.copyAll') }}</span>
         </RippleButton>
       </div>
-      <a class="footer-repo" :href="REPOSITORY_URL" target="_blank" rel="noreferrer" @click="openRepository">GitHub</a>
+      <a class="footer-repo" :href="repoUrl" target="_blank" rel="noreferrer" @click="openRepository">GitHub</a>
     </footer>
   </main>
 </template>
@@ -355,7 +355,8 @@
     REPOSITORY_URL,
     RAW_PLACEHOLDER,
     SETTINGS_STORAGE_KEY,
-    STATUS_HIDE_DELAY
+    STATUS_HIDE_DELAY,
+    getReadmeUrl
   } from '@/utils/constants'
   import { cycleTheme, getStoredTheme, setStoredTheme, themeLabel, type ThemeMode } from '@/utils/theme'
   import { checkPageSupport } from '@/utils/page-support'
@@ -363,6 +364,8 @@
   import { formatTechStackReport } from '@/utils/format-tech-stack'
 
   const { t, locale, tm } = useI18n({ useScope: 'global' })
+
+  const repoUrl = computed(() => getReadmeUrl(locale.value))
 
   const showLangMenu = ref(false)
 
@@ -386,6 +389,13 @@
     return level
   }
 
+  // 翻译 kind 前缀（技术子类型，来自规则 kind 字段）
+  const tKind = (zhKind: string): string => {
+    if (!zhKind) return zhKind
+    const map = tm('kindMap') as Record<string, string> | undefined
+    return (map && map[zhKind]) || zhKind
+  }
+
   // 翻译证据字符串（前缀匹配后翻译前缀，保留后面的具体内容）
   const EVIDENCE_PREFIX_MAP: Record<string, string> = {
     'DOM 匹配': 'ev.domMatch',
@@ -399,6 +409,9 @@
   }
   const tEvidence = (ev: string): string => {
     if (!ev) return ev
+    // 精确命中 evidenceMap（来自规则 JSON 的 evidence 字段，已预翻译）
+    const evMap = tm('evidenceMap') as Record<string, string> | undefined
+    if (evMap?.[ev]) return evMap[ev]
     // 兜底识别 — 脚本文件名格式
     const scriptMatch = ev.match(/^兜底识别：根据脚本文件名 (.+?) 判断，未匹配到内置规则或官网链接$/)
     if (scriptMatch) return `${t('ev.fallback')}${t('ev.fallbackScript', { file: scriptMatch[1] })}`
@@ -450,10 +463,13 @@
     if (phpCmsMatch) return t('ev.phpFromCms', { name: phpCmsMatch[1] })
     const phpClueMatch = ev.match(/^由 (.+?) 技术线索推断 PHP 后端运行时$/)
     if (phpClueMatch) return t('ev.phpFromClue', { name: phpClueMatch[1] })
-    // JS 包体内嵌 OAuth 入口（前面可能有 "类型：" 前缀）
-    const oauthMatch = ev.match(/^(?:(.+?)：)?JS 包体内嵌 OAuth 入口 (.+)$/)
+    // JS 包体内嵌 OAuth 入口（前面可能有 "类型：" 前缀，全角或半角冒号）
+    const oauthMatch = ev.match(/^(?:(.+?)[：:]\s)?JS 包体内嵌 OAuth 入口 (.+)$/)
     if (oauthMatch) {
-      const prefix = oauthMatch[1] ? `${oauthMatch[1]}: ` : ''
+      const kindMap = tm('kindMap') as Record<string, string> | undefined
+      const rawKind = oauthMatch[1]
+      const translatedKind = rawKind ? (kindMap && kindMap[rawKind]) || rawKind : ''
+      const prefix = translatedKind ? `${translatedKind}: ` : ''
       return prefix + t('ev.oauthEmbed', { url: oauthMatch[2] })
     }
     // CSS 变量前缀：存在 --prefix-* CSS 变量
@@ -488,8 +504,16 @@
     // CSS 变量匹配 X
     const cssVarMatch = ev.match(/^CSS 变量匹配 (.+)$/)
     if (cssVarMatch) return `${t('ev.cssVarMatch')} ${cssVarMatch[1]}`
-    // "X 匹配" 格式 — sourceLabel + 匹配
-    const sourceMatchSuffix = ev.match(/^(.+?) 匹配$/)
+    // "kind：具体证据" 格式 — kind 前缀通过 kindMap 翻译（必须在 sourceMatchSuffix 之前，
+    // 否则 "自有埋点 SDK：JSON 统计动态规则 匹配" 会被后者提前吞掉）
+    const kindPrefixMatch = ev.match(/^(.+?)：(.+)$/)
+    if (kindPrefixMatch) {
+      const translatedKind = tKind(kindPrefixMatch[1])
+      const translatedEvidence = tEvidence(kindPrefixMatch[2])
+      return `${translatedKind}: ${translatedEvidence}`
+    }
+    // "X 匹配" 格式 — sourceLabel + 匹配（[^：] 保证不含全角冒号，避免误匹配上面格式的剩余部分）
+    const sourceMatchSuffix = ev.match(/^([^：]+) 匹配$/)
     if (sourceMatchSuffix) return t('ev.ruleMatch', { source: tSource(sourceMatchSuffix[1]) })
     for (const [prefix, key] of Object.entries(EVIDENCE_PREFIX_MAP)) {
       if (ev.startsWith(prefix)) {
@@ -579,7 +603,7 @@
     if (footerPanel.value !== 'raw') return ''
     const ctx = rawSourceContext.value
     if (!ctx) return t('footer.raw')
-    return `${t('footer.raw')} · ${ctx.tech?.name || ''} · ${tSource(ctx.source)}`
+    return `${t('footer.raw')} · ${ctx.tech ? tTechName(ctx.tech.name) : ''} · ${tSource(ctx.source)}`
   })
 
   const footerPanelTitle = computed(() => {
@@ -587,7 +611,7 @@
     if (footerPanel.value === 'raw') return rawPanelTitle.value
     if (footerPanel.value === 'resources') return `${t('summary.resources')}（${detailResources.value.length}）`
     if (footerPanel.value === 'headers') return `${t('summary.headers')}（${Object.keys(detailHeaders.value).length}）`
-    if (footerPanel.value === 'tech') return selectedTech.value?.name || t('app.title')
+    if (footerPanel.value === 'tech') return selectedTech.value ? tTechName(selectedTech.value.name) : t('app.title')
     return ''
   })
 
@@ -827,13 +851,13 @@
 
   const requestPopupResult = async (tabId: number) => {
     const response = await chrome.runtime.sendMessage({ type: 'GET_POPUP_RESULT', tabId })
-    if (!response?.ok) throw new Error(response?.error || '后台没有返回结果')
+    if (!response?.ok) throw new Error(response?.error || t('msg.noCache'))
     return response
   }
 
   const requestPopupRawResult = async (tabId: number) => {
     const response = await chrome.runtime.sendMessage({ type: 'GET_POPUP_RAW_RESULT', tabId })
-    if (!response?.ok) throw new Error(response?.error || '后台没有返回原始线索')
+    if (!response?.ok) throw new Error(response?.error || t('msg.noRaw'))
     return response.data || {}
   }
 
@@ -1020,7 +1044,7 @@
 
   const openRepository = (event: Event) => {
     event.preventDefault()
-    chrome.tabs.create({ url: REPOSITORY_URL })
+    chrome.tabs.create({ url: getReadmeUrl(locale.value) })
   }
 
   const copyResult = async () => {
@@ -1222,6 +1246,42 @@
     }
   }
 
+  // 把 raw JSON 里的技术记录字段翻译成当前语言，供 Raw data 面板展示
+  const translateRawForDisplay = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj
+    if (Array.isArray(obj)) return obj.map(translateRawForDisplay)
+
+    const result: Record<string, any> = {}
+    for (const [k, v] of Object.entries(obj)) {
+      if (k === 'technologies' && Array.isArray(v)) {
+        result[k] = v.map((tech: any) => {
+          if (!tech || typeof tech !== 'object') return tech
+          return {
+            ...tech,
+            name: tTechName(tech.name),
+            category: tCat(tech.category),
+            confidence: tConfidence(tech.confidence),
+            source: tech.source ? tSource(tech.source) : tech.source,
+            sources: Array.isArray(tech.sources) ? tech.sources.map(tSource) : tech.sources,
+            evidence: Array.isArray(tech.evidence) ? tech.evidence.map(tEvidence) : tech.evidence
+          }
+        })
+      } else if (k === 'source' && typeof v === 'string') {
+        result[k] = tSource(v)
+      } else if (k === 'technology' && typeof v === 'string') {
+        result[k] = tTechName(v)
+      } else if (k === 'notes' && Array.isArray(v)) {
+        const notesMap = tm('rawNotes') as Record<string, string> | undefined
+        result[k] = v.map((note: string) => notesMap?.[note] || note)
+      } else if (['apiObservations', 'frameObservations', 'dynamicObservations', 'bundleObservations'].includes(k)) {
+        result[k] = translateRawForDisplay(v)
+      } else {
+        result[k] = v
+      }
+    }
+    return result
+  }
+
   const renderRawOutput = async () => {
     if (!state.result) {
       rawOutputText.value = t('msg.noRaw')
@@ -1232,12 +1292,12 @@
       const raw = await getRawResult()
       const ctx = rawSourceContext.value
       if (ctx) {
-        rawOutputText.value = JSON.stringify(buildScopedRawJson(raw, ctx.tech, ctx.source), null, 2)
+        rawOutputText.value = JSON.stringify(translateRawForDisplay(buildScopedRawJson(raw, ctx.tech, ctx.source)), null, 2)
       } else {
-        rawOutputText.value = JSON.stringify(raw, null, 2)
+        rawOutputText.value = JSON.stringify(translateRawForDisplay(raw), null, 2)
       }
     } catch (error: any) {
-      rawOutputText.value = `原始线索生成失败：${String(error?.message || error)}`
+      rawOutputText.value = t('msg.rawFailed', { msg: String(error?.message || error) })
     }
   }
 
@@ -1251,14 +1311,14 @@
   const searchPageSourceFromPopup = async () => {
     const query = search.query
     if (!query) {
-      search.meta = '请输入要搜索的内容。'
+      search.meta = t('search.queryRequired')
       search.output = ''
       return
     }
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (!tab || !tab.id) {
-      search.meta = '无法读取当前标签页。'
+      search.meta = t('search.noTab')
       search.output = ''
       return
     }
@@ -1276,7 +1336,7 @@
       useRegex: search.useRegex
     }
 
-    search.meta = '正在搜索当前页面 DOM 源码快照...'
+    search.meta = t('search.searching')
     search.output = ''
 
     try {
@@ -1296,38 +1356,38 @@
       const result = injection?.result as any
 
       if (!result?.ok) {
-        search.meta = result?.error || '搜索失败。'
+        search.meta = result?.error || t('search.searchFailed')
         search.output = ''
         return
       }
 
-      search.meta = `找到 ${result.totalMatchesText} 处匹配，源码长度 ${result.sourceLength.toLocaleString()} 字符。`
+      search.meta = t('search.searchFound', { count: result.totalMatchesText, length: result.sourceLength.toLocaleString() })
       search.output = formatSearchResult(result)
     } catch (error: any) {
-      search.meta = `搜索失败：${String(error?.message || error)}`
+      search.meta = t('search.searchFailed') + ': ' + String(error?.message || error)
       search.output = ''
     }
   }
 
   const formatSearchResult = (result: any) => {
     const lines = [
-      `查询: ${result.query}`,
-      `模式: ${describeSearchOptions(result.options)}`,
-      `来源: ${result.sourceKind}`,
-      `源码长度: ${result.sourceLength.toLocaleString()} 字符`,
-      `匹配数量: ${result.totalMatchesText}`
+      `${t('search.queryLabel')}: ${result.query}`,
+      `${t('search.modeLabel')}: ${describeSearchOptions(result.options)}`,
+      `${t('search.sourceLabel')}: ${result.sourceKind}`,
+      `${t('search.sourceLength')}: ${result.sourceLength.toLocaleString()}`,
+      `${t('search.matchCount')}: ${result.totalMatchesText}`
     ]
 
     if (!result.snippets.length) {
-      lines.push('', '未找到匹配。')
+      lines.push('', t('search.noMatch'))
       return lines.join('\n')
     }
-    if (result.truncated) lines.push(`只展示前 ${result.snippets.length} 条匹配上下文。`)
+    if (result.truncated) lines.push(t('search.truncated', { n: result.snippets.length }))
 
     lines.push('', '----------------------------------------')
     for (const snippet of result.snippets) {
       lines.push(
-        `#${snippet.index} 行 ${snippet.line} 列 ${snippet.column} 字符位置 ${snippet.offset}`,
+        t('search.matchLocation', { index: snippet.index, line: snippet.line, col: snippet.column, offset: snippet.offset }),
         snippet.preview,
         '----------------------------------------'
       )
@@ -1337,9 +1397,9 @@
 
   const describeSearchOptions = (options: any) => {
     const parts: string[] = []
-    parts.push(options.useRegex ? '正则表达式' : '普通文本')
-    parts.push(options.caseSensitive ? '区分大小写' : '忽略大小写')
-    if (options.wholeWord) parts.push('全字匹配')
+    parts.push(options.useRegex ? t('search.modeRegex') : t('search.modePlain'))
+    parts.push(options.caseSensitive ? t('search.modeCaseSensitive') : t('search.modeCaseInsensitive'))
+    if (options.wholeWord) parts.push(t('search.modeWholeWord'))
     return parts.join(' / ')
   }
 
